@@ -1,3 +1,4 @@
+Unix only: консультативная (advisory) блокировка
 
 
 https://en.wikipedia.org/wiki/File_locking#Lock_files
@@ -6,4 +7,4 @@ More than one process can hold an exclusive flock on a given file if the exclusi
 
 
 
-flock kill -9 without trap?
+flock kill -9 without trap?   Gmm OK?
