@@ -1,0 +1,9 @@
+
+
+https://en.wikipedia.org/wiki/File_locking#Lock_files
+
+More than one process can hold an exclusive flock on a given file if the exclusive lock was duplicated across a later fork. This simplifies coding for network servers and helps prevent race conditions, but can be confusing to the unaware.
+
+
+
+flock kill -9 without trap?
