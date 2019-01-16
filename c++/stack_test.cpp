@@ -1,17 +1,16 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <signal.h>
-#include <unistd.h>
+// otool -lV ./a.out | grep stack
+// g++ -std=c++14 -Wl,-stack_size,0x200000 ./stack_test.cpp && ./a.out
 #include <iostream>
 #include <functional>
-#define LARGE (2097152); /* 8MB/sizeof(int) */
+#include <unistd.h>
+
 
 rlim_t check_max_value( rlim_t l, rlim_t r, const std::function<bool(rlim_t)> checker )
 {
     rlim_t middle;
 
-    while( l <= r){
-        middle = (l+r)/2;
+    while( l <= r ){
+        middle = (l + r)/2;
 
         if (checker(middle)){
             l = middle + 1;
@@ -20,36 +19,40 @@ rlim_t check_max_value( rlim_t l, rlim_t r, const std::function<bool(rlim_t)> ch
         }
     }
 
-    return middle - 1;
+    return checker(middle)? middle : middle - 1;
 }
 
 
 int main(int argc, char **argv)
 {
-
-        struct rlimit lim;
+    struct rlimit lim;
     getrlimit( RLIMIT_STACK, &lim );
-    std::cout << lim.rlim_cur << "\n";
-    std::cout << lim.rlim_max << "\n";
 
-
-    check_max_value( 0, lim.rlim_cur/4096, [](auto a) {
+    rlim_t rlim_real =  check_max_value( 0, lim.rlim_cur, [&](auto a) {
+        std::cout << "check: " << a ;
         int pid = fork();
         if( !pid ) {
-            /* Child would crash with a segfault if stack overflows */
-            int arr[a];
+            // Child would crash with a segfault if stack overflows 
+            uint8_t arr[a];
+            exit(0);
         }
-        int status = 0;
+        int status;
         waitpid(pid, &status, WUNTRACED);
-        if(WIFEXITED(status))
+        if( !status )
         {
-            /* Child exited normally and not because of a segfault. */
-            printf("Estimated stack size is %d\n", a * 4096);
+            // Child exited normally and not because of a segfault. 
+            std::cout << " - OK"<< std::endl;
             return true;
         }
 
+        std::cout << " - FAIL"<< std::endl;
         return false;
     });
 
-   return 0;
+    std::cout << "Current: " << lim.rlim_cur << std::endl;
+    std::cout << "Maximal: " << lim.rlim_max << std::endl;
+    std::cout << "Real:    " << rlim_real << std::endl;
+
+
+    return 0;
 }
