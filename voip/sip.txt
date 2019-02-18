@@ -1,0 +1,136 @@
+
+1. Max-Forwards - loop detector
+2. Request-URI (первая строка)  главнее from/to так как они могут быть модифицированы
+3. может быть несколько одновременных диалогов -> Call-ID
+	
+4.0	request <method> <Request-URI> <protocol>
+
+	INVITE sip:123@imind2-beta.mind-dev.ru;transport=tcp SIP/2.0.
+
+4.1  минимальный набор sip заголовка: 
+	Via: SIP/2.0/TCP 10.0.1.165:5060;branch=z9hG4bKD7BA121Bb192b000a501000a.
+	From: "ak" <sip:aleksey.komarov@snipe.mind-dev.ru>;tag=71897F6D-FB7E9E24.
+	To: <sip:123@imind2-beta.mind-dev.ru>.
+	CSeq: 1 INVITE.
+	Call-ID: f464cb52-211bb9c9-35efcd80@10.0.1.165.
+	Contact: <sip:aleksey.komarov@10.0.1.165:5060;transport=tcp>.
+	Max-Forwards: 70.
+
+4.2 дополниетельное
+	Allow: INVITE,ACK,BYE,CANCEL,OPTIONS,INFO,MESSAGE,SUBSCRIBE,NOTIFY,PRACK,UPDATE,REFER.
+	Resource-Priority: dsn-000000.0.
+	User-Agent: Polycom RealPresence Desktop for Mac (3.4.0.54718).
+	Supported: 100rel,timer,replaces,resource-priority.
+	MRD: MRE; MRC-V=1.0.1.
+	Multiplexing: EP.
+	Content-Type: application/sdp.
+	Content-Length: 2324.
+	.
+	<SDP>
+	
+4.1.1
+	branch - идентификатор транзакции
+	Чаще всего, значение branch начинается с “z9hG4bK”. Это значит, что запрос был сгенерирован клиентом, поддерживающим RFC 3261 и параметр уникален для каждой транзакции этого клиента.
+	
+
+5.0 Ringing:
+	SIP/2.0 180 Ringing.																			#формат ответа в обратном порядке?	
+			Via: SIP/2.0/TCP 10.0.1.165:5060;branch=z9hG4bKD7BA121Bb192b000a501000a.
+			From: "ak" <sip:aleksey.komarov@snipe.mind-dev.ru>;tag=71897F6D-FB7E9E24.
+	To: <sip:123@imind2-beta.mind-dev.ru>;tag=B2B.258.195.											#добавился tag от сервера
+			CSeq: 1 INVITE.																		#инкрементит не сообщение а запрос!!!
+			Call-ID: f464cb52-211bb9c9-35efcd80@10.0.1.165.
+			Orig-User-Agent: XCoder SIP Signalling/1.9.23.
+			Orig-Call-ID: B2B.32.7139225.
+	Contact: <sip:10.0.7.108:5060>.									#инфа о сервере
+	Server: OpenSIPS (1.11.9-notls (x86_64/linux)).
+	Content-Length: 0.
+	.
+	
+
+6.0 OK:
+	SIP/2.0 200 OK.
+			Via: SIP/2.0/TCP 10.0.1.165:5060;branch=z9hG4bKD7BA121Bb192b000a501000a.
+			From: "ak" <sip:aleksey.komarov@snipe.mind-dev.ru>;tag=71897F6D-FB7E9E24.
+			To: <sip:123@imind2-beta.mind-dev.ru>;tag=B2B.258.195.
+			CSeq: 1 INVITE.
+			Call-ID: f464cb52-211bb9c9-35efcd80@10.0.1.165.
+	Supported: timer, norefersub.
+	Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, UPDATE, PRACK, INFO, MESSAGE, REFER, SUBSCRIBE, NOTIFY.
+	Session-Expires: 90;refresher=uas.
+	Require: timer.
+	Orig-User-Agent: XCoder SIP Signalling/1.9.23.
+	Orig-Call-ID: B2B.32.7139225.
+	Contact: <sip:10.0.7.108:5060>.
+	Server: OpenSIPS (1.11.9-notls (x86_64/linux)).
+	Content-Type: application/sdp.
+	Content-Length: 1485.
+	<SDP>
+
+	
+	
+
+	
+Comments:	
+5.Contact vs From:
+	 Contact: <sip:user@host_name>
+	 From: <sip:user@sip_domain>  # если через registrar иначе совпадает с Contact
+	 
+6.UAC messages for Allow
+	#base:
+	INVITE
+	ACK	- только на INVITE?
+	OPTIONS - хапрос доп фунционала
+	BYE - запрос завершения? / а если игнор запроса?
+	CANCEL - отмена вызова в стадии установления
+	REGISTER - запрос регистрации 
+	
+	#additional
+	INFO 		- запрос обмена инфоай на стадии установления/работы (ping / heartbeat через него?)
+	MESSAGE 	- чатилка?
+	NOTIFY 		- изменение состояние ресурса на который была подписка
+	PRACK 		- промежуточный/предварительных ответ о статусе работы длительного запроса
+	REFER 		- иди ты вот туда а я занят
+	SUBSCRIBE 	- подписка на состояние объекта
+	UPDATE 		- Запрос изменения параметров сеанса
+
+7.Supported
+ 	100rel	- PRACK - (Provisional Response Acknowledgement) enable reliability for SIP 1xx provisional messages like 180 ringing and 183 session
+ 	timer - Session Expires Timers ?
+ 	replaces - replaces headers ?
+ 	resource-priority ?
+	outbound - outbound proxy / nat provisining ?????
+	norefersub - PREFER
+	
+8. Content-Type: 
+		application/sdp  - Session Description Protocol (SDP)
+
+9. Content-Length - с учетом знаков <CR><LF> / \r\n  / 0xD 0xA после каждой строки
+
+
+10. TO/FROM - определяют направление запроса, а не сообщения!!
+
+
+
+
+
+11 base call flaw
+
+client				server
+
+----- INVITE -------->
+<---- 180 RINGING----
+<---- 200 OK --------
+----- ACK ----------->
+
+
+
+
+
+Questions:
+1. RPD in Invate
+	Resource-Priority: dsn-000000.0
+
+#Links
+https://habrahabr.ru/post/188352/ - отличный разбор базовой сессии
+http://samag.ru/archive/article/1831
