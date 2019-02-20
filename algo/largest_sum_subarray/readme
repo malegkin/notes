@@ -1,0 +1,17 @@
+Kadane's algo
+http://e-maxx.ru/algo/maximum_average_segment
+
+1d:
+    https://www.geeksforgeeks.org/largest-sum-contiguous-subarray/ 
+    Time    : O(n)
+    Memory  : O(1)
+
+2d:
+    https://www.geeksforgeeks.org/maximum-sum-rectangle-in-a-2d-matrix-dp-27/
+    Time    : O(n^3)
+    Memory  : O(n)
+
+
+Practise:
+    http://acm.timus.ru/problem.aspx?space=1&num=1146 Maximum Sum
+

@@ -12,10 +12,16 @@ template <typename T>
 struct matrix_t {
         // (rows, columns)
         matrix_t (size_t height, size_t width)
+            : _height( height )
+            , _width( width )
+            , _data( height * width, 0 )
+            {};
+
+        matrix_t (size_t height, size_t width, std::initializer_list<T> l) 
             : _height(height)
             , _width(width)
-            , _data(height * width, 0)
-            {};
+            , _data( l ) 
+            {};        
 
         void init(std::istream &in) {
             std::copy_n( std::istream_iterator<T>(in), _height*_width, std::back_insert_iterator<std::vector<T>>( _data ));
@@ -75,7 +81,7 @@ auto get_maximal_sub_array(const std::vector<T>& in) {
             i_local_s = i + 1; 
         } 
     }
-    
+ 
     return std::make_tuple( global_max, i_start, i_end );
 } 
   
@@ -98,21 +104,14 @@ auto get_maximal_sub_rectangle(const matrix_t<T>& in) {
     
     std::vector<T> tmp(in.get_height(), 0);
 
-    for (size_t i_left = 0; i_left < in.get_width(); ++i_left){
-        std::fill( std::begin(tmp), std::end(tmp), 0);
-        for (size_t i_right = i_left; i_right < in.get_width(); ++i_right){
-            for (size_t i = 0; i < in.get_height(); i++) {
-                std::cout <<"e:"<< in[i_right][i] << "\t"; 
-               tmp[i] += in[i_right][i];
-            }
-            std::cout << std::endl;
-            for (auto a: tmp){
-                std::cout << a << "\t";
-            }
-
+    for (size_t i_left = 0; i_left < in.get_width(); ++i_left) {
+        std::fill( std::begin(tmp), std::end(tmp), 0 );
+        for (size_t i_right = i_left; i_right < in.get_width(); ++i_right) {
+            for (size_t i = 0; i < in.get_height(); i++) 
+                tmp[i] += in[i][i_right];
+            
             auto msa = get_maximal_sub_array(tmp);
             auto lm  = std::get<0>(msa);
-            std::cout << lm << std::endl;
             if ( gm < lm ) {
                 gm = lm;
                 i_max_left  = i_left;
@@ -120,7 +119,7 @@ auto get_maximal_sub_rectangle(const matrix_t<T>& in) {
                 i_max_top   = std::get<1>(msa);
                 i_max_bottom  = std::get<2>(msa);
             } 
-        }
+        }    
     }
 
     return std::make_tuple( gm, i_max_top, i_max_left, i_max_bottom, i_max_right );
@@ -129,35 +128,23 @@ auto get_maximal_sub_rectangle(const matrix_t<T>& in) {
 
 
 //main
-int main() 
-{ 
+int main() { 
+
+    //1d
     std::vector<int32_t> in = {-2, -3, 4, -1, 2, -1, 5, -3}; 
-    int32_t max;
-    size_t  i_start, i_end;
-    std::tie(max, i_start, i_end) = get_maximal_sub_array( in );
+    auto msa = get_maximal_sub_array( in );
  
-    std::cout   << "Maximum contiguous sum is: "    << max      << std::endl 
-                << "Starting index: "               << i_start  << std::endl 
-                << "Ending index: "                 << i_end    << std::endl; 
+    std::cout   << "Maximum contiguous sum is: "    << std::get<0>( msa ) << std::endl 
+                << "Starting index: "               << std::get<1>( msa ) << std::endl 
+                << "Ending index: "                 << std::get<2>( msa ) << std::endl; 
 
 
-    matrix_t<int32_t> m(4, 5);
-    int32_t M[4][5] = {{1, 2, -1, -4, -20}, 
-					    {-8, -3, 4, 2, 1}, 
-					    {3, 8, 10, 1, 3}, 
-					    {-4, -1, 1, 7, -6} };
 
-    for (size_t i = 0; i < 4; i++){
-        for (size_t j = 0; j < 5; j++){
-            m[i][j] = M[i][j];
-        } 
-    } 
-    for (size_t i = 0; i < 4; i++){
-        for (size_t j = 0; j < 5; j++){
-            std::cout << m[i][j] << "\t";
-        }
-        std::cout << std::endl; 
-    } 
+    //2d
+    matrix_t<int32_t> m(4, 5,  { 1, 2,  -1, -4, -20, 
+					            -8, -3, 4,  2,  1, 
+					            3,  8,  10, 1,  3, 
+					            -4, -1, 1,  7,  -6 });
 
     auto mr = get_maximal_sub_rectangle( m );
     std::cout   << std::endl << "Maximal sub rectangle:" << std::endl
